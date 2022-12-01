@@ -1,72 +1,63 @@
 #include "EscapeChar.hpp"
 
-using namespace Ekms308;
-using namespace Ekms308::Frame;
+using namespace escchar;
 
-static bool isSpecialChar(byte, const std::initializer_list<byte> &);
+static bool isSpecialChar(uint8_t, const std::initializer_list<uint8_t> &);
 
-size_t Format::AddEscapeChars(byte *output,
-                              size_t limit,
-                              const ByteSpan &input,
-                              byte escapeChar,
-                              std::initializer_list<byte> specialChars)
+size_t escchar::addEscapeChars(const Configuration& config)
 {
     size_t index = 0;
 
-    for(size_t i = 0; i < input.size; i++)
+    for(size_t i = 0; i < config.inputSize; i++)
     {
-        if(index == limit)
+        if(index == config.limit)
             return 0;
 
-        if( input.data[i] == escapeChar ||
-            isSpecialChar(input.data[i], specialChars) == true)
+        if( config.input[i] == config.escapeChar ||
+            isSpecialChar(config.input[i], config.specialChars) == true)
         {
-            output[index++] = escapeChar;
+            config.output[index++] = config.escapeChar;
 
-            if(index == limit)
+            if(index == config.limit)
             return 0;
         }
 
-        output[index++] = input.data[i];
+        config.output[index++] = config.input[i];
     }
 
     return index;
 }
 
-size_t Format::RemoveEscapeChars(byte *output,
-                                 size_t limit,
-                                 const ByteSpan &input,
-                                 byte escapeChar,
-                                 std::initializer_list<byte> specialChars)
+size_t escchar::removeEscapeChars(const Configuration& config)
 {
     size_t index = 0;
     bool wasEscapeChar = false;
 
-    for(size_t i = 0; i < input.size; i++)
+    for(size_t i = 0; i < config.inputSize; i++)
     {
-        if(index == limit)
+        if(index == config.limit)
             return 0;
 
-        if(isSpecialChar(input.data[i], specialChars) == true)
+        if(isSpecialChar(config.input[i], config.specialChars) == true)
         {
             if(wasEscapeChar == false)
                 return 0;
             
-            output[index++] = input.data[i];
+            config.output[index++] = config.input[i];
             wasEscapeChar = false;
         }
-        else if(input.data[i] == escapeChar)
+        else if(config.input[i] == config.escapeChar)
         {
             if(wasEscapeChar == false)
                 wasEscapeChar = true;
             else
             {
-                output[index++] = input.data[i];
+                config.output[index++] = config.input[i];
                 wasEscapeChar = false;
             }
         }
         else
-            output[index++] = input.data[i];
+            config.output[index++] = config.input[i];
 
     }
 
@@ -77,7 +68,7 @@ size_t Format::RemoveEscapeChars(byte *output,
 }
 
 
-static bool isSpecialChar(byte element, const std::initializer_list<byte> &specialChars)
+static bool isSpecialChar(uint8_t element, const std::initializer_list<uint8_t> &specialChars)
 {
     for(auto character : specialChars)
         if(character == element)
